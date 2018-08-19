@@ -1,0 +1,42 @@
+html, body {
+  width: 100%; }
+
+nav {
+  width: 100%; }
+  @media screen and (min-width: 992px) {
+    nav h1 {
+      position: absolute; } }
+  nav #navbarNav ul {
+    justify-content: center;
+    width: 100%; }
+
+h2 {
+  text-align: center;
+  margin: 2rem; }
+
+h5 {
+  display: flex;
+  justify-content: space-between; }
+
+#list-tab {
+  text-align: center; }
+
+.list-group {
+  flex-direction: row; }
+
+.list-group, .tab-content, .input-group {
+  width: 90%;
+  margin: .5rem auto; }
+  @media screen and (min-width: 600px) {
+    .list-group, .tab-content, .input-group {
+      width: 80%; } }
+  .list-group .list-group-item, .tab-content .list-group-item, .input-group .list-group-item {
+    border-radius: .2rem !important; }
+
+form {
+  width: 80%;
+  margin: auto; }
+  form input, form select {
+    margin-bottom: 0.5rem; }
+
+/*# sourceMappingURL=style.css.map */
