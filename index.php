@@ -1,3 +1,6 @@
+<!-- DEBUT DU HEADER.PHP
+tu peux factoriser tout le début de tes fichiers php dans un fichier séparé et l'include dans tous les autres php
+ -->
 <!DOCTYPE html>
 <html lang="fr" dir="ltr">
     <head>
@@ -12,12 +15,18 @@
         <?php $user = "admin";
         $pass = "plop";
         $db = new PDO('mysql:host=localhost;dbname=crm_bdd', $user, $pass);
+// FIN DU HEADER.PHP
+        // le nom de la variable doit être au pluriel
+        // espace avant et après le =
         $customer=$db->query("SELECT * FROM Customers")->fetchAll();
         $business=$db->query("SELECT * FROM Business")->fetchAll();
         if ($_GET) {
+            // c'est pas parce que tu es en GET que t'es assuré d'avoir les valeurs 'category' et 'id'
+            // ta condition doit plutot ressemblé à isset($_GET['category']) && !empty($_GET['category']) && isset($_GET['id']) && !empty($_GET['id'])
             $selectedCategory = $_GET['category'];
             $deletedID = $_GET['id'];
-            $db->query("SET foreign_key_checks = 0");
+            $db->query("SET foreign_key_checks = 0"); //pourquoi tu veux ca ?
+            //bien vu pour le passage en paramètre du nom de la table dans laquelle deleter ! ;)
             $delete = $db->prepare("DELETE FROM $selectedCategory WHERE id=$deletedID");
             $delete->execute();
             $db->query("SET foreign_key_checks = 1");
@@ -25,7 +34,7 @@
         }?>
         <div class="container-fluid p-0">
             <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-                <h1><a class="navbar-brand" href="index.php">My mini (putain de) CRM</a></h1>
+                <h1><a class="navbar-brand" href="index.php">My mini (putain de) CRM</a></h1>  <!-- grossier personnage -->
                 <button
                     class="navbar-toggler" type="button"
                     data-toggle="collapse"
@@ -52,8 +61,7 @@
             <h2>Listing clients & entreprises</h2>
             <div class="list-group" id="list-tab" role="tablist">
                 <a class="col-6 list-group-item list-group-item-action active" id="list-customer-list"
-                data-toggle="list" href="#list-customer" role="tab" aria-controls="customer">Client (<?php
-                echo count($customer)?>)</a>
+                data-toggle="list" href="#list-customer" role="tab" aria-controls="customer">Client (<?php echo count($customer)?>)</a>
                 <a class="col-6 list-group-item list-group-item-action" id="list-business-list"
                 data-toggle="list" href="#list-business" role="tab" aria-controls="business">Entreprise (<?php echo count($business)?>)</a>
             </div>
@@ -66,11 +74,18 @@
                                 <button class="btn btn-outline-primary" type="button" id="customerInputCancel"><i class="fas fa-ban"></i></button>
                             </div>
                         </div>
-                    <?php foreach ($customer as $value):?>
-                    <?php $customerBusiness=$db->query(
-                        "SELECT * FROM Business
-                    WHERE id=".$value['business_id']
-                    )->fetch();?>
+                    <?php 
+                        //si tu avais appelé ta variable $customers tu aurais pu écrire foreach ($customers as $customer)
+                        //sémantiquement plus efficient
+                        foreach ($customer as $value): 
+                    ?>
+                    <?php 
+                       //un coup du fait du query, un coup du faire du prepare/execute
+                       // 1) faut choisir son camps pour un question de cohérence de code
+                       // 2) quand y'a pas de paramètre à concater, tu peux faire du query, 
+                       // sinon prepare/execuse pour éviter les injections SQL https://goo.gl/dg1uvQ
+                       $customerBusiness=$db->query("SELECT * FROM Business WHERE id=".$value['business_id'])->fetch();
+                    ?>
                         <div class="card customerCard">
                             <div class="card-header"
                             id="headingC<?php echo $value['id'] ?>">
@@ -88,11 +103,9 @@
                                         <div class="media-body">
                                             <h5 class="mt-0"><?php echo $value['name']?>
                                                 <span>
-                                                    <a href="editCustomers.php?id=<?php
-                                                    echo $value['id'] ?>">
+                                                    <a href="editCustomers.php?id=<?php echo $value['id'] ?>">
                                                     <i class="fas fa-edit"></i></a>
-                                                    <a data-toggle="modal" href="#deleteCustomer<?php
-                                                    echo $value['id'] ?>">
+                                                    <a data-toggle="modal" href="#deleteCustomer<?php echo $value['id'] ?>">
                                                     <i class="fas fa-trash-alt"></i></a>
                                                 </span>
                                             </h5>
@@ -103,15 +116,18 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="modal fade" id="deleteCustomer<?php
-                        echo $value['id'] ?>"tabindex="-1" role="dialog" aria-labelledby="delete-Customer" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered"
-                            role="document">
+                        <!-- tu génère une modal par lien de suppression ... trop trop trop lourd en terme de code généré
+                        ta page HTML va devenir énorme est donc lourde à charger
+                        Il faut mieux faire plus de JS et moins d'HTML
+                        Il faut que tu fasses une et une seule modal « à trou » que tu complétement en JS en fonction du lien cliquer
+                         -->
+                        <div class="modal fade" id="deleteCustomer<?php echo $value['id'] ?>"tabindex="-1" role="dialog" aria-labelledby="delete-Customer" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="deleteCustomer<?php
-                                        echo $value['id'] ?>">
-                                        <?php echo $value['name'] ?></h5>
+                                        <h5 class="modal-title" id="deleteCustomer<?php echo $value['id'] ?>">
+                                            <?php echo $value['name'] ?>
+                                        </h5>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
@@ -121,9 +137,7 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
-                                        <a href="index.php?category=Customers&id=<?php
-                                        echo $value['id']?>"
-                                        class="btn btn-primary">Confirmer</a>
+                                        <a href="index.php?category=Customers&id=<?php echo $value['id']?>" class="btn btn-primary">Confirmer</a>
                                     </div>
                                 </div>
                             </div>
@@ -131,6 +145,7 @@
                     <?php endforeach;?>
                     </div>
                 </div>
+                <!-- les remarques pour la partie client s'applique aussi à la partie Entreprise -->
                 <div class="tab-pane fade" id="list-business"
                 role="tabpanel" aria-labelledby="list-business-list">
                     <div id="accordionBusiness">
@@ -159,11 +174,9 @@
                                             <h5 class="mt-0">
                                             <?php echo $value['name'] ?>
                                                 <span>
-                                                    <a href="editBusiness.php?id=<?php
-                                                    echo $value['id'] ?>">
+                                                    <a href="editBusiness.php?id=<?php  echo $value['id'] ?>">
                                                     <i class="fas fa-edit"></i></a>
-                                                    <a data-toggle="modal" href="#deleteBusiness<?php
-                                                    echo $value['id'] ?>">
+                                                    <a data-toggle="modal" href="#deleteBusiness<?php echo $value['id'] ?>">
                                                     <i class="fas fa-trash-alt"></i></a>
                                                 </span>
                                             </h5>
@@ -172,8 +185,9 @@
                                             <ul>
                                             <?php foreach ($worker as $actualWorker):?>
                                                 <li>
-                                                    <a href="#collapseC<?php echo $actualWorker['id']?>" class="toCustomerCard"><?php
-                                                    echo $actualWorker['name'];?></a>
+                                                    <a href="#collapseC<?php echo $actualWorker['id']?>" class="toCustomerCard">
+                                                        <?php echo $actualWorker['name'];?>
+                                                    </a>
                                                 </li>
                                             <?php endforeach; ?>
                                             </ul>
@@ -182,15 +196,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="modal fade" id="deleteBusiness<?php
-                        echo $value['id'] ?>"tabindex="-1" role="dialog" aria-labelledby="delete-Business" aria-hidden="true">
+                        <div class="modal fade" id="deleteBusiness<?php echo $value['id'] ?>"tabindex="-1" role="dialog" aria-labelledby="delete-Business" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered"
                             role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="deleteBusiness<?php
-                                        echo $value['id'] ?>">
-                                        <?php echo $value['name'] ?></h5>
+                                        <h5 class="modal-title" id="deleteBusiness<?php echo $value['id'] ?>">
+                                            <?php echo $value['name'] ?>
+                                        </h5>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
@@ -200,9 +213,7 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
-                                        <a href="index.php?category=Business&id=<?php
-                                        echo $value['id']?>"
-                                        class="btn btn-primary">Confirmer</a>
+                                        <a href="index.php?category=Business&id=<?php echo $value['id']?>" class="btn btn-primary">Confirmer</a>
                                     </div>
                                 </div>
                             </div>
@@ -212,8 +223,10 @@
                 </div>
             </div>
         </div>
+<!-- meme si c'est moi important vu le nombre de ligne que ca represente, tu peux aussi faire un FOOTER.PHP et l'include -->
         <script src="node_modules/jquery/dist/jquery.min.js"></script>
         <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
         <script src="js/script.js"></script>
     </body>
 </html>
+<!-- FIN DU FOOTER.PHP -->
